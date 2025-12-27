@@ -2,41 +2,12 @@ import { compare, hash } from "bcrypt";
 import { model, Model, Schema } from "mongoose";
 import { SALT_ROUNDS } from "../config/constants";
 import {
+  AppSource,
   AuthProvider,
   IUser,
   IUserDocument,
   UserRole,
 } from "../interfaces/user";
-
-const bookmarkSchema = new Schema(
-  {
-    contractId: {
-      type: Schema.Types.ObjectId,
-      ref: "contract",
-      required: true,
-    },
-    bookmarkedAt: {
-      type: Date,
-      default: Date.now,
-    },
-  },
-  { _id: false }
-);
-
-const archivedContractSchema = new Schema(
-  {
-    contractId: {
-      type: Schema.Types.ObjectId,
-      ref: "contract",
-      required: true,
-    },
-    archivedAt: {
-      type: Date,
-      default: Date.now,
-    },
-  },
-  { _id: false }
-);
 
 const userSchema = new Schema<IUserDocument, Model<IUserDocument>, IUser>(
   {
@@ -80,13 +51,17 @@ const userSchema = new Schema<IUserDocument, Model<IUserDocument>, IUser>(
       enum: Object.values(UserRole),
       default: UserRole.USER,
     },
-    bookmarks: {
-      type: [bookmarkSchema],
-      default: [],
+    appSource: {
+      type: String,
+      enum: Object.values(AppSource),
+      required: true,
     },
-    archivedContracts: {
-      type: [archivedContractSchema],
-      default: [],
+    registeredApps: {
+      type: [String],
+      enum: Object.values(AppSource),
+      default: function () {
+        return [this.appSource];
+      },
     },
   },
   { timestamps: true }

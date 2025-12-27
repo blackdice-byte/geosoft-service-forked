@@ -1,24 +1,20 @@
-import { Document, Types } from "mongoose";
+import { Document } from "mongoose";
+
+export enum AppSource {
+  TIMETABLELY = "timetablely",
+  DOCXIQ = "docxiq",
+  LINKSHYFT = "linkshyft",
+}
 
 export enum AuthProvider {
   LOCAL = "local",
   GOOGLE = "google",
-  BOTH = "both"
+  BOTH = "both",
 }
 
 export enum UserRole {
   ADMIN = "admin",
   USER = "user",
-}
-
-export interface IBookmark {
-  contractId: Types.ObjectId;
-  bookmarkedAt: Date;
-}
-
-export interface IArchivedContract {
-  contractId: Types.ObjectId;
-  archivedAt: Date;
 }
 
 export interface IUser {
@@ -31,10 +27,11 @@ export interface IUser {
   password?: string;
   googleId?: string;
   firstname?: string;
-  bookmarks?: IBookmark[];
   isEmailVerified?: boolean;
   authProvider?: AuthProvider;
-  archivedContracts?: IArchivedContract[];
+  // Multi-app support
+  appSource: AppSource;
+  registeredApps?: AppSource[];
 }
 
 export interface IUserDocument extends IUser, Document {
