@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
 import chalk from "colors";
+import mongoose from "mongoose";
 import { MONGO_PROD_URI, MONGO_URI } from "./constants";
 
 const isProd = process.env.NODE_ENV === "PROD";
