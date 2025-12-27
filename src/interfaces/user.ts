@@ -17,6 +17,12 @@ export enum UserRole {
   USER = "user",
 }
 
+export enum UserPlan {
+  FREE = "free",
+  PRO = "pro",
+  ENTERPRISE = "enterprise",
+}
+
 export interface IUser {
   email: string;
   role?: UserRole;
@@ -32,6 +38,10 @@ export interface IUser {
   // Multi-app support
   appSource: AppSource;
   registeredApps?: AppSource[];
+  // AI credits & plan
+  plan?: UserPlan;
+  apiQuota?: number;
+  usedQuota?: number;
 }
 
 export interface IUserDocument extends IUser, Document {

@@ -2,11 +2,12 @@ import { compare, hash } from "bcrypt";
 import { model, Model, Schema } from "mongoose";
 import { SALT_ROUNDS } from "../config/constants";
 import {
+  IUser,
+  UserPlan,
+  UserRole,
   AppSource,
   AuthProvider,
-  IUser,
   IUserDocument,
-  UserRole,
 } from "../interfaces/user";
 
 const userSchema = new Schema<IUserDocument, Model<IUserDocument>, IUser>(
@@ -62,6 +63,19 @@ const userSchema = new Schema<IUserDocument, Model<IUserDocument>, IUser>(
       default: function () {
         return [this.appSource];
       },
+    },
+    plan: {
+      type: String,
+      enum: Object.values(UserPlan),
+      default: UserPlan.FREE,
+    },
+    apiQuota: {
+      type: Number,
+      default: 100,
+    },
+    usedQuota: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }
