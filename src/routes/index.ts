@@ -1,5 +1,6 @@
 import { Request, Response, Router } from "express";
 import { createResponse } from "../helpers/response";
+import { AuthRouter } from "./auth.route";
 
 const router = Router();
 
@@ -12,5 +13,7 @@ router.get("/health-check", (_req: Request, res: Response) => {
     })
   );
 });
+
+router.use("/auth", AuthRouter);
 
 export { router as rootRouter };
