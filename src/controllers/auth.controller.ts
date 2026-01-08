@@ -155,4 +155,172 @@ export class AuthController {
       next(error);
     }
   }
+
+  public static async signup(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email, password, username, firstname, lastname, appSource } =
+        req.body;
+
+      if (!email || !password || !username || !appSource) {
+        throw new APIError({
+          message: "Email, password, username, and appSource are required",
+          status: 400,
+        });
+      }
+
+      if (!Object.values(AppSource).includes(appSource)) {
+        throw new APIError({
+          message: "Valid appSource is required",
+          status: 400,
+        });
+      }
+
+      const existingUser = await User.findOne({
+        $or: [{ email }, { username }],
+      });
+
+      if (existingUser) {
+        throw new APIError({
+          message:
+            existingUser.email === email
+              ? "Email already in use"
+              : "Username already taken",
+          status: 409,
+        });
+      }
+
+      const user = await new User({
+        email,
+        password,
+        username,
+        firstname,
+        lastname,
+        authProvider: AuthProvider.LOCAL,
+        appSource,
+        registeredApps: [appSource],
+      } as any).save();
+
+      const accessToken = await generateAccessToken({
+        user_id: user._id.toString(),
+        email: user.email,
+        username: user.username,
+        role: user.role,
+      });
+
+      res.status(201).json(
+        createResponse({
+          status: 201,
+          success: true,
+          message: "User registered successfully",
+          data: {
+            user: {
+              id: user._id,
+              email: user.email,
+              username: user.username,
+              firstname: user.firstname,
+              lastname: user.lastname,
+              role: user.role,
+              plan: user.plan,
+            },
+            accessToken,
+          },
+        })
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async signin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        throw new APIError({
+          message: "Email and password are required",
+          status: 400,
+        });
+      }
+
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        throw new APIError({
+          message: "Invalid email or password",
+          status: 401,
+        });
+      }
+
+      if (!user.password) {
+        throw new APIError({
+          message: "Please sign in with Google",
+          status: 400,
+        });
+      }
+
+      const isMatch = await user.comparePassword(password);
+
+      if (!isMatch) {
+        throw new APIError({
+          message: "Invalid email or password",
+          status: 401,
+        });
+      }
+
+      const accessToken = await generateAccessToken({
+        user_id: user._id.toString(),
+        email: user.email,
+        username: user.username,
+        role: user.role,
+      });
+
+      res.json(
+        createResponse({
+          status: 200,
+          success: true,
+          message: "Sign in successful",
+          data: {
+            user: {
+              id: user._id,
+              email: user.email,
+              username: user.username,
+              firstname: user.firstname,
+              lastname: user.lastname,
+              avatar: user.avatar,
+              role: user.role,
+              plan: user.plan,
+            },
+            accessToken,
+          },
+        })
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async verifyAccount(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { userId } = req.body;
+      const user = await User.findOne({ userId }).orFail(() => {
+        throw new APIError({ message: "User not found", status: 404 });
+      });
+      user.isEmailVerified = true;
+      await user.save();
+      res.status(200).json(
+        createResponse({
+          status: 200,
+          success: true,
+          message: "User verified successfully",
+          data: user,
+        })
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
