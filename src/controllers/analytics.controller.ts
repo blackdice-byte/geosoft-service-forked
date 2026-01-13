@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { createResponse } from "../helpers/response";
 import APIError from "../helpers/api.error";
 import { Visit } from "../models/visit.model";
+import { User } from "../models/user.model";
 import { AppSource } from "../interfaces/user";
 
 export class AnalyticsController {
@@ -109,6 +110,83 @@ export class AnalyticsController {
             totalVisits,
             visitsByApp,
             visitsByPath,
+          },
+        })
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async getAdminDashboard(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const now = new Date();
+      const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      const [
+        totalUsers,
+        totalVisits,
+        activeUsers24h,
+        signups7d,
+        signups30d,
+        visitsByApp,
+        usersByApp,
+        recentSignups,
+        dailyVisits,
+      ] = await Promise.all([
+        User.countDocuments(),
+        Visit.countDocuments(),
+        User.countDocuments({ lastLogin: { $gte: last24h } }),
+        User.countDocuments({ createdAt: { $gte: last7d } }),
+        User.countDocuments({ createdAt: { $gte: last30d } }),
+        Visit.aggregate([
+          { $group: { _id: "$appSource", count: { $sum: 1 } } },
+        ]),
+        User.aggregate([
+          { $group: { _id: "$appSource", count: { $sum: 1 } } },
+        ]),
+        User.find()
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .select("email username appSource createdAt"),
+        Visit.aggregate([
+          { $match: { createdAt: { $gte: last7d } } },
+          {
+            $group: {
+              _id: {
+                date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                app: "$appSource",
+              },
+              count: { $sum: 1 },
+            },
+          },
+          { $sort: { "_id.date": 1 } },
+        ]),
+      ]);
+
+      res.json(
+        createResponse({
+          status: 200,
+          success: true,
+          message: "Admin dashboard data retrieved",
+          data: {
+            overview: {
+              totalUsers,
+              totalVisits,
+              activeUsers24h,
+              signups7d,
+              signups30d,
+            },
+            visitsByApp,
+            usersByApp,
+            recentSignups,
+            dailyVisits,
           },
         })
       );
