@@ -1,5 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import { buildPrompt, AppType, getAppApiKey } from "../helpers/prompt";
+import {
+  AppType,
+  buildPrompt,
+  getAppApiKey,
+  getAppContext,
+  getAppInstructions,
+  getAppCapabilities,
+} from "../helpers/prompt";
 import APIError from "../helpers/api.error";
 import { createResponse } from "../helpers/response";
 import { search } from "../services/gemini.service";
@@ -7,8 +14,8 @@ import { search } from "../services/gemini.service";
 interface GeneratePromptRequest {
   appType: AppType;
   userPrompt: string;
-  includeCapabilities?: boolean;
   additionalContext?: string;
+  includeCapabilities?: boolean;
 }
 
 export const generatePrompt = async (
@@ -86,9 +93,6 @@ export const getAppInfo = async (
         isPublic: true,
       });
     }
-
-    const { getAppInstructions, getAppContext, getAppCapabilities } =
-      await import("../helpers/prompt");
 
     const instructions = getAppInstructions(appType as AppType);
     const context = getAppContext(appType as AppType);
