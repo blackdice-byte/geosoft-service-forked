@@ -24,5 +24,10 @@ async function search({
 
   return response;
 }
+function MakePrompt(apiKey: string) {
+  const ai = new GoogleGenAI({ apiKey });
+  return ai;
+}
 
-export { search };
+
+export { search, MakePrompt };
