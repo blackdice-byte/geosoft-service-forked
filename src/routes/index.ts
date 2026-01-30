@@ -1,9 +1,9 @@
-import { Request, Response, Router } from "express";
-import { createResponse } from "../helpers/response";
-import { AuthRouter } from "./auth.route";
-import { AnalyticsRouter } from "./analytics.route";
 import { AIRouter } from "./ai.route";
 import { DocxIQRouter } from "./docxiq";
+import { AuthRouter } from "./auth.route";
+import { Request, Response, Router } from "express";
+import { AnalyticsRouter } from "./analytics.route";
+import { createResponse } from "../helpers/response";
 
 const router = Router();
 
